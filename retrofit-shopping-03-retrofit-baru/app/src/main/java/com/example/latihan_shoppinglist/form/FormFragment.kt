@@ -16,7 +16,7 @@ import androidx.lifecycle.observe
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import com.example.latihan_shoppinglist.R
-import com.example.latihan_shoppinglist.data.EntityRequest
+import com.example.latihan_shoppinglist.data.model.ItemRequest
 import com.example.latihan_shoppinglist.data.model.Item
 import com.example.latihan_shoppinglist.data.repository.ItemRepository
 import com.example.latihan_shoppinglist.databinding.FragmentFormBinding
@@ -38,6 +38,7 @@ class FormFragment : Fragment() {
         }
         initModel()
         subscribe()
+        Log.d("ITEM", "${itemValue}")
     }
 
     override fun onCreateView(
@@ -92,11 +93,12 @@ class FormFragment : Fragment() {
                             name = nameEt.editText?.text.toString(),
                             date = dateEt.editText?.text.toString(),
                             quantity = quantity,
-                            id = ""
+                            id = 0
                     )
                 } else {
                     //update
                     itemValue?.id?.let { it ->
+                        Log.d("btn EDIT", "$it")
                         itemValue = Item(
                                 note = noteEt.editText?.text.toString(),
                                 name = nameEt.editText?.text.toString(),
@@ -104,6 +106,7 @@ class FormFragment : Fragment() {
                                 quantity = quantity,
                                 id = it
                         )
+                        Log.d("btn EDIT", "$itemValue")
                     }
                 }
                 viewModel.validation(itemValue!!)
@@ -145,12 +148,19 @@ class FormFragment : Fragment() {
                     loadingDialog.show()
                 }
                 ResourceStatus.SUCCESS -> {
+                    val request = itemValue?.id?.let { it1 ->
+                        ItemRequest(
+                                name = binding.nameTiet.text.toString(),
+                                date = binding.dateTiet.text.toString(),
+                                note = binding.noteTiet.text.toString(),
+                                quantity = binding.quantityTiet.text.toString().toInt(),
+                                id = it1
+                        )
+                    }
 
-                    val newItem = it.data as Item
-                    val (note,name,date,quantity) = newItem
-                    val request = EntityRequest(name = newItem.name, note = newItem.note, date = newItem.date, quantity = newItem.quantity)
-                    Log.d("REQUEST", "$request")
-                    viewModel.addData(request)
+                    if (request != null) {
+                        viewModel.addData(request)
+                    }
                     loadingDialog.hide()
                 }
             }

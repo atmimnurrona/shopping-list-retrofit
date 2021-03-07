@@ -1,15 +1,17 @@
-package com.example.latihan_shoppinglist.data
+package com.example.latihan_shoppinglist.data.model
 
 import com.google.gson.annotations.SerializedName
 
-data class EntityRequest (
+data class ItemRequest (
 
+        @SerializedName("id")
+        val id: Int = 0,
     @SerializedName("name")
     var name: String? = null,
     @SerializedName("date")
     var date: String? = null,
     @SerializedName("note")
     var note: String? = null,
-    @SerializedName("quantiy")
+    @SerializedName("quantity")
     var quantity: Int = 0
 )

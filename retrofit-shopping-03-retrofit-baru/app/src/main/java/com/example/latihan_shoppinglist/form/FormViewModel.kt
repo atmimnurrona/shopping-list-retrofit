@@ -5,15 +5,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.latihan_shoppinglist.MainActivity
-import com.example.latihan_shoppinglist.api.EntityApi
-import com.example.latihan_shoppinglist.data.Entity
-import com.example.latihan_shoppinglist.data.EntityRequest
+import com.example.latihan_shoppinglist.api.ItemApi
 import com.example.latihan_shoppinglist.data.model.Item
+import com.example.latihan_shoppinglist.data.model.ItemRequest
 import com.example.latihan_shoppinglist.data.repository.ItemRepository
 import com.example.latihan_shoppinglist.utils.ResourceState
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,11 +19,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class FormViewModel(val repository: ItemRepository) : ViewModel() {
 
-    private var _itemLiveData = MutableLiveData<Boolean>()
+    private var _itemLiveData = MutableLiveData<ResourceState>()
     private var _isValid = MutableLiveData<ResourceState>()
 
-
-    val itemLiveData : LiveData<Boolean>
+    val itemLiveData : LiveData<ResourceState>
         get() {
             return _itemLiveData
         }
@@ -36,26 +32,25 @@ class FormViewModel(val repository: ItemRepository) : ViewModel() {
             return _isValid
         }
 
-//    fun save(item: Item) {
-//        _itemLiveData.value = repository.save(item)
-//    }
+    fun addData(item: ItemRequest) {
+        CoroutineScope(Dispatchers.IO).launch {
+            _itemLiveData.postValue(ResourceState.loading())
+            val response =
+                    if(item.id == 0) {
+                        repository.addItem(item)
+                    } else {
+                        repository.editItem(item)
+                    }
 
-    fun addData(entity: EntityRequest) {
-        val retrofit = Retrofit.Builder().baseUrl(MainActivity.baseUrl)
-            .addConverterFactory(GsonConverterFactory.create()).build()
-        val service = retrofit.create(EntityApi::class.java)
-        val call = service.addData(entity)
-        call.enqueue(object : Callback<Entity> {
-            override fun onFailure(call: Call<Entity>, t: Throwable) {
-                Log.i("ONFAILURE", "${t.message}")
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    Log.d("DATA", "$it")
+                    _itemLiveData.postValue(ResourceState.success(it))
+                }
+            } else {
+                _itemLiveData.postValue(ResourceState.fail("error"))
             }
-
-            override fun onResponse(call: Call<Entity>, response: Response<Entity>) {
-                _itemLiveData.value = response.isSuccessful
-            }
-
-
-        })
+        }
     }
 
     fun validation(item: Item) {
@@ -71,7 +66,7 @@ class FormViewModel(val repository: ItemRepository) : ViewModel() {
             } else if (item.quantity.toString().isNullOrBlank()) {
                 _isValid.postValue(ResourceState.fail("Quantity can not empty"))
             } else {
-                _isValid.postValue(ResourceState.success(item))
+                _isValid.postValue(ResourceState.success(true))
             }
         }
     }

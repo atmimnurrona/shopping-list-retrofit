@@ -14,12 +14,17 @@ import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.latihan_shoppinglist.R
+import com.example.latihan_shoppinglist.data.model.Item
 import com.example.latihan_shoppinglist.data.repository.ItemRepository
 import com.example.latihan_shoppinglist.databinding.FragmentListBinding
+import com.example.latihan_shoppinglist.form.FormViewModel
+import com.example.latihan_shoppinglist.utils.ResourceState
+import com.example.latihan_shoppinglist.utils.ResourceStatus
 
 class ListFragment : Fragment() {
 
     lateinit var viewModel: ListViewModel
+    lateinit var viewModelForm: FormViewModel
     lateinit var binding: FragmentListBinding
     lateinit var rvAdapter: ListViewAdapter
     private var page = 0
@@ -34,7 +39,7 @@ class ListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
+        Log.d("onCreateView", "irfaaaaaaaaaan")
         binding = FragmentListBinding.inflate(layoutInflater)
         viewModel.getAllData()
         binding.apply {
@@ -64,6 +69,11 @@ class ListFragment : Fragment() {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Log.d("ONVIEWCREATE", "atmim")
+    }
+
     private fun initViewModel() {
         viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
             override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -76,17 +86,28 @@ class ListFragment : Fragment() {
     private fun subscribe() {
         //show list item
         viewModel.itemsLiveData.observe(this) {
-            Log.d("DATA", "$it")
-            rvAdapter.setData(it)
+            Log.d("SUBSCRIBE", "ekaaa")
+            when (it.status) {
+                ResourceStatus.LOADING -> Log.d("APP", "Loading..")
+                ResourceStatus.SUCCESS -> {
+                    val data : List<Item> = it.data as List<Item>
+                    rvAdapter.setData(data)
+                }
+            }
         }
 
+//        viewModelForm.itemLiveData.observe(requireActivity()) {
+//            viewModel.getAllData()
+//        }
+
         //edit to form item
-        viewModel.itemLiveData.observe(this) {
-            Log.d("GET ITEM", "$it")
+        viewModel.updateLiveData.observe(this) {
+            val response = it.data as Item
+            Log.d("GET ITEM", "${response}")
             Navigation.findNavController(requireView())
                     .navigate(
                             R.id.action_listFragment_to_formFragment,
-                            bundleOf("edit_item" to it)
+                            bundleOf("edit_item" to response)
                     )
         }
     }
