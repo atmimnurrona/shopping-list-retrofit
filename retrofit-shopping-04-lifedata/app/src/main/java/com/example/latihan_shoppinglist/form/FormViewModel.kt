@@ -41,10 +41,8 @@ class FormViewModel(val repository: ItemRepository) : ViewModel() {
                     } else {
                         repository.editItem(item)
                     }
-
             if (response.isSuccessful) {
                 response.body()?.let {
-                    Log.d("DATA", "$it")
                     _itemLiveData.postValue(ResourceState.success(it))
                 }
             } else {
@@ -53,7 +51,7 @@ class FormViewModel(val repository: ItemRepository) : ViewModel() {
         }
     }
 
-    fun validation(item: Item) {
+    fun validation(item: ItemRequest) {
         GlobalScope.launch {
             _isValid.postValue(ResourceState.loading())
             delay(1000)

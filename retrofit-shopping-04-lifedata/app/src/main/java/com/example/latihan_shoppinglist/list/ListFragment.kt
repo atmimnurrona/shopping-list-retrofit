@@ -24,7 +24,6 @@ import com.example.latihan_shoppinglist.utils.ResourceStatus
 class ListFragment : Fragment() {
 
     lateinit var viewModel: ListViewModel
-    lateinit var viewModelForm: FormViewModel
     lateinit var binding: FragmentListBinding
     lateinit var rvAdapter: ListViewAdapter
     private var page = 0
@@ -33,6 +32,7 @@ class ListFragment : Fragment() {
         super.onCreate(savedInstanceState)
         initViewModel()
         subscribe()
+        viewModel.getAllData()
     }
 
     override fun onCreateView(
@@ -41,7 +41,6 @@ class ListFragment : Fragment() {
     ): View? {
         Log.d("onCreateView", "irfaaaaaaaaaan")
         binding = FragmentListBinding.inflate(layoutInflater)
-        viewModel.getAllData()
         binding.apply {
 
 //            nextBtn.setOnClickListener {
@@ -56,22 +55,17 @@ class ListFragment : Fragment() {
 //                }
 //            }
 
+            addItemFab.setOnClickListener {
+                findNavController().navigate(R.id.action_listFragment_to_formFragment)
+            }
+
             rvAdapter = ListViewAdapter(viewModel)
             recyclerViewItem.apply {
                 layoutManager = LinearLayoutManager(requireContext())
                 adapter = rvAdapter
             }
-
-            addItemFab.setOnClickListener {
-                findNavController().navigate(R.id.action_listFragment_to_formFragment)
-            }
         }
         return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        Log.d("ONVIEWCREATE", "atmim")
     }
 
     private fun initViewModel() {
@@ -95,10 +89,6 @@ class ListFragment : Fragment() {
                 }
             }
         }
-
-//        viewModelForm.itemLiveData.observe(requireActivity()) {
-//            viewModel.getAllData()
-//        }
 
         //edit to form item
         viewModel.updateLiveData.observe(this) {

@@ -34,6 +34,9 @@ class ListViewModel(private val repository: ItemRepositoryInterface) : ViewModel
             return _updateLiveData
         }
 
+    init {
+        getAllData()
+    }
 
     fun getAllData() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -71,8 +74,8 @@ class ListViewModel(private val repository: ItemRepositoryInterface) : ViewModel
                 _updateLiveData.postValue(ResourceState.success(response.body()))
             } else {
                 _updateLiveData.postValue(ResourceState.fail("error"))
-
             }
+            getAllData()
         }
     }
 }

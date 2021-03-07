@@ -27,6 +27,7 @@ import java.util.*
 class FormFragment : Fragment() {
 
     private var itemValue: Item? = null
+    private var itemRequestValue: ItemRequest? = null
     private lateinit var binding: FragmentFormBinding
     private lateinit var viewModel: FormViewModel
     private lateinit var loadingDialog: AlertDialog
@@ -87,8 +88,7 @@ class FormFragment : Fragment() {
 
                 if (itemValue == null) {
                     //add
-                    Log.d("data", "jalan")
-                    itemValue = Item(
+                    itemRequestValue = ItemRequest(
                             note = noteEt.editText?.text.toString(),
                             name = nameEt.editText?.text.toString(),
                             date = dateEt.editText?.text.toString(),
@@ -98,18 +98,16 @@ class FormFragment : Fragment() {
                 } else {
                     //update
                     itemValue?.id?.let { it ->
-                        Log.d("btn EDIT", "$it")
-                        itemValue = Item(
+                        itemRequestValue = ItemRequest(
                                 note = noteEt.editText?.text.toString(),
                                 name = nameEt.editText?.text.toString(),
                                 date = dateEt.editText?.text.toString(),
                                 quantity = quantity,
                                 id = it
                         )
-                        Log.d("btn EDIT", "$itemValue")
                     }
                 }
-                viewModel.validation(itemValue!!)
+                viewModel.validation(itemRequestValue!!)
             }
 
             cancelBtn.setOnClickListener {
@@ -131,7 +129,12 @@ class FormFragment : Fragment() {
 
     private fun subscribe() {
         viewModel.itemLiveData.observe(this) {
-            findNavController().navigate(R.id.action_formFragment_to_listFragment)
+            when(it.status) {
+                ResourceStatus.LOADING -> Log.d("App", "Loading...")
+                ResourceStatus.SUCCESS ->
+                    findNavController().navigate(R.id.action_formFragment_to_listFragment)
+                ResourceStatus.FAIL -> Log.d("App", "Fail")
+            }
         }
 
         viewModel.isValid.observe(this) {
@@ -139,28 +142,16 @@ class FormFragment : Fragment() {
                 ResourceStatus.FAIL -> {
                     loadingDialog.hide()
                     Toast.makeText(
-                            requireContext(),
-                            it.message,
-                            Toast.LENGTH_SHORT
+                        requireContext(),
+                        it.message,
+                        Toast.LENGTH_SHORT
                     ).show()
                 }
                 ResourceStatus.LOADING -> {
                     loadingDialog.show()
                 }
                 ResourceStatus.SUCCESS -> {
-                    val request = itemValue?.id?.let { it1 ->
-                        ItemRequest(
-                                name = binding.nameTiet.text.toString(),
-                                date = binding.dateTiet.text.toString(),
-                                note = binding.noteTiet.text.toString(),
-                                quantity = binding.quantityTiet.text.toString().toInt(),
-                                id = it1
-                        )
-                    }
-
-                    if (request != null) {
-                        viewModel.addData(request)
-                    }
+                    viewModel.addData(itemRequestValue!!)
                     loadingDialog.hide()
                 }
             }
